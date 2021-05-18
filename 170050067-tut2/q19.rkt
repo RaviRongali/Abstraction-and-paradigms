@@ -1,0 +1,16 @@
+#lang racket
+(define (makelist x n)
+  (if (= n 0) '()
+      (append (list x) (makelist x (- n 1)))))
+;;q19
+(define (gc x)
+  (define (binary n p)
+   (define (helper n)
+   (if (= 0 n) '()
+       (append  (helper (quotient n 2)) (list (remainder n 2)))))
+   (if (= (length (helper n)) p) (helper n)
+       (append (makelist 0 (- p (length (helper n)))) (helper n))))
+  (define (helper z)
+    (if (= z -1) '()
+        (append (list (binary z x)) (helper (- z 1)))))
+  (helper (- (expt 2 x) 1)))

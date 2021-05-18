@@ -1,0 +1,193 @@
+#lang racket
+(require math/base)
+
+;q1 - done
+(define (has-solution a b c) (= 0 (remainder c (gcd a b))))
+;q2 - half done
+(define (sub x y)
+  (cond [(= y 0) x]
+        [else (+ (* (sub (quotient x 10) (quotient y 10)) 10) (- (remainder x 10) (remainder y 10)))]
+  )
+)
+;q3 - done
+(define (div x y)
+  (cond [(= x 0) (cons 0 0)]
+        [else (let* (
+                     [qx2 (quotient x 2)]
+                     [rx2 (remainder x 2)]
+                     [b2  (div qx2 y)]
+                     [rb2 (remainder (+ (* (cdr b2) 2) rx2) y)]
+                     [qb2 (+ (* (car b2) 2) (quotient (+ (* (cdr b2) 2) rx2) y))]                     
+                     )
+                (cons qb2 rb2)
+                )]
+        ))
+;q4 - done
+(define (coeffs a b)
+  (cond [(= 0 b) (cons 1 0)]
+        [else (let* (
+                     [n (div a b)]
+                     [c (coeffs b (cdr n))]
+                     )
+                (cons (cdr c) (- (car c) (* (car n) (cdr c))))
+                )]
+        ))
+;q5 - done
+(define (modexp x y n) (modexp-rec x y 1 n)) 
+(define (modexp-rec x y c n)
+  (cond [(= 0 y) c]
+        [else (modexp-rec (modulo (* x x) n) (quotient y 2) (if (divides y 2) c (modulo (* c x) n)) n)]
+        ))
+;q6 - done
+(define (divides p q) (= 0 (modulo p q)))
+(define (is-carmichael n) (and (not (is-prime n)) (is-carmichael-rec n n 2 0)))
+(define (is-carmichael-rec n m i p)
+  (cond [(= i m) (divides (- n 1) (- i 1))]
+        [(divides m i) (is-carmichael-rec n (/ m i) i (+ p 1))]
+        [(> p 0) (and (divides (- n 1) (- i 1)) (not (divides p 2)) (is-carmichael-rec n m (+ i 1) 0))]
+        [else (is-carmichael-rec n m (+ i 1) 0)]
+        ))
+
+;q7 -done
+(define (inverse e n) (modulo (car  (coeffs e n) ) n))
+;q8 - done
+(define (power a b) (power-rec a b 1))
+(define (power-rec a b c)
+  (cond [(= b 0) c]
+        [(divides b 2) (power-rec (* a a) (quotient b 2) c)]
+        [else (power-rec (* a a) (quotient b 2) (* c a))]
+  ))
+(define (is-prime-probably n)
+  (let* ([k (random n)])
+    (= (remainder (- (power k n) k) n) 0)
+    )
+  )
+;q9 - done
+(define (is-really-prime n i)
+  (cond [(= n i) #t]
+        [(= (remainder n i) 0) #f]
+        [else (is-really-prime n (+ i 1))]
+        )
+  )
+(define (goldbach m)
+  (cond
+    [(= (remainder m 2) 1) #f]
+    [else (goldie m 2 (- m 2))]
+    )
+  )
+(define (goldie m p q)
+  (cond
+    [(= q 1) #f]
+    [(and (is-really-prime p 2) (is-really-prime q 2)) #t]
+    [else (goldie m (+ p 1) (- q 1))]
+    )
+  )
+;q10 - done
+(define (getPrivateKey p q e) (inverse e (* (- p 1) (- q 1))))
+(define (decode p q e c) (modexp c (getPrivateKey p q e) (* p q)))
+;q11
+;function and filter definitions
+(define (square n) (* n n))
+(define (tautology n) #t)
+(define (factorial n) (if (= 0 n) 1 (* n (factorial (- n 1)))))
+(define (is-odd n) (= 1 (remainder n 2)))
+(define (three-divisibility n) (= 0 (remainder n 3)))
+(define (is-prime n)
+  (cond [(< n 2) #f]
+        [else (is-prime-rec n 2)]
+        ))
+(define (is-prime-rec n m)
+  (cond  [(= n m) #t]
+        [(= 0 (remainder n m)) #f]
+        [else (is-prime-rec n (+ m 1))]
+        ))
+(define (rel-pri-50 n) (= 1 (gcd n 50)))
+;filtered acuumualtion
+(define (filtered-accumulate operation function filter start end step counter)
+  (cond [(> start end) counter]
+        [(filter start) (filtered-accumulate operation function filter (+ start step) end step (operation counter start))]
+        [else (filtered-accumulate operation function filter (+ start step) end step counter)]
+  ))
+;the functions
+(define (f0 x y) (filtered-accumulate + identity tautology (+ x 12) 100 13 0))
+(define (f1 x y) (filtered-accumulate + square is-odd x y 1 0))
+(define (f2 x y) (filtered-accumulate * factorial three-divisibility x y 1 1))
+(define (f3 x y) (filtered-accumulate + square is-prime x y 1 0))
+(define (f4 y) (filtered-accumulate * identity rel-pri-50 1 (- y 1) 1 1))
+
+;q12 - done
+(define (simpson f a b n) (/ (- (sims-iter f a (/ (- b a) n) n 0) (+ (f a) (f b))) 3))
+(define (sims-iter f a h n c)
+  (cond [(= n 0) c]
+        [else (sims-iter f (+ a (* 2 h)) h (- n 2) (+ c (+ (* 2 (f a)) (* 4 (f (+ a h))))))]
+  ))
+;q13 - done
+(define (simplify r)
+  (let* (
+         [p (car r)]
+         [q (cdr r)]
+         )
+    (cons (/ p (gcd p q)) (/ q (gcd p q)))
+    ))
+(define (add r1 r2)
+  (simplify (cons (+ (* (car r1) (cdr r2)) (* (car r2) (cdr r1))) (* (cdr r1) (cdr r1)))
+   ))
+(define (multiply r1 r2)
+  (simplify (cons (* (car r1) (car r2)) (* (cdr r1) (cdr r2))))
+  )
+(define (divide r1 r2)
+  (simplify (cons (* (car r1) (cdr r2)) (* (cdr r1) (car r2))))
+  )
+;q14
+(define (minchange n) (altur n 0 7))
+(define (demon denom)
+  (cond [(= 7 denom) 50]
+        [(= 6 denom) 25]
+        [(= 5 denom) 20]
+        [(= 4 denom) 10]
+        [(= 3 denom) 5]
+        [(= 2 denom) 3]
+       [(= 1 denom) 2]
+        [(= 0 denom) 1]
+        ))
+(define (altur money weight denom)
+  (cond [(>= money 150) (altur (remainder money 150) (+ weight (* 3 (quotient money 150))) denom)]
+        [(= 0 denom) (+ weight money)]
+        [(>= money (demon denom)) (min (altur money weight (- denom 1)) (altur (- money (demon denom)) (+ weight 1) denom))]
+        [else (altur money weight (- denom 1))]
+        ))
+;q15 - done
+(define (scaled-random x y) (+ x (* (random) (- y x))))
+(define (est-pi n) (* (/ (est-dart-hits 0 n) n) 4))
+(define (est-dart-hits c n)
+  (cond [(= n 0) c]
+        [else (let* (
+                    [x (scaled-random 0 1)]
+                    [y (scaled-random 0 1)]
+                    [r (sqrt (+ (* x x) (* y y)))]
+                    )
+              (cond [(> r 1) (est-dart-hits c (- n 1))]
+                    [else (est-dart-hits (+ c 1) (- n 1))]
+                    )
+              )]
+        ))
+;q16 - done
+(define (fib-rec n)
+  (cond [(= 0 n) 0]
+        [(= 1 n) 1]
+        [else (+ (fib-rec (- n 1)) (fib-rec (- n 2)))]
+        ))
+        
+(define (fib-tail n) (fib-tr n 0 1))
+(define (fib-tr n a b)
+  (cond [(= n 0) a]
+        [else (fib-tr (- n 1) (+ a b) a)]
+        ))
+;lightning fibonnaci - fibo will thank me for this :)
+(define (bite n) (byte-rec n 0 0))
+(define (byte-rec n m l) (if (= 0 n) (cons m l) (byte-rec (remainder n 2) (+ (quotient n 2) (* m 2)) (+ l 1))))
+(define (fib-scale n N) (* n (sqrt (((divides n 2) + -) (* 5 n n) 4))))
+(define (fib-lightning n) (let* ([b (bite n)]) ((fib-lighter (car b) (cdr b) 0 1 (cons 0 1)))))
+(define (fib-lighter n l a b AB)
+  (if (= 0 l) (car AB) (let* ([A2 (fib-scale a (car AB))] [B2 (fib-scale b (cdr AB))]) ((fib-lighter (remainder n 2) (- l 1) (if (divides n 2) (cons A2 (- B2 A2)) (cons (- B2 A2) B2))))
+        )))

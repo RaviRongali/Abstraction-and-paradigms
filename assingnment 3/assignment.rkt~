@@ -1,0 +1,221 @@
+#lang racket
+
+; Type for respresenting clauses
+(struct Var (lit) #:transparent)
+(struct And (x y) #:transparent)
+(struct Or (x y) #:transparent)
+(struct Not (e) #:transparent)
+(struct Const (bool) #:transparent)
+
+;; An empty dictionary
+(define assign #hash())
+
+; Parses a single clause---
+; (list 1 -2) into (Or (Var 1) (Not (Var 2)))
+(define (parseSubExp ls)
+  (cond [(null? ls) (error "Given an empty sub-expression")]
+        [(null? (cdr ls)) (parseNeg (car ls))]
+        [else (Or (parseNeg (car ls))
+                  (parseSubExp (cdr ls)))]))
+
+; Parses i to (Var i) and -i to (Not (Var i))
+(define (parseNeg num)
+  (if (< num 0) (Not (Var (* num -1))) (Var num)))
+
+; Parses full list
+; Ex. (list '( 1 2) '(-3 2)) into
+; (And (Or (Var 1) (Var 2)) (Or (Not (Var 3)) (Var 2)))
+(define (parseExp es)
+  (cond [(null? es) (error "Given empty list of expressions")]
+        [(null? (cdr es)) (parseSubExp (car es))]
+        [else (And (parseSubExp (car es))
+                   (parseExp (cdr es)))]))
+
+
+;;unit propogation
+
+;;getlist of elements
+(define global null)
+
+;(define (Unitpropogation l)
+  
+  (define (unitlist l)
+    (define ans null)
+    (define (helper l)
+    (cond[(null? l) #t]
+         [(null? (car l)) #f]
+         [(if (null? (cdar l)) (begin (set! ans (car l))
+                                      ans)
+             (helper (cdr l)))]))
+    (helper l))
+
+  (define (remove-single p l)
+    (define ans null) 
+  (define (search x l)
+  (cond[(null? l ) #f]
+       [(equal? x (car l)) #t]
+       [else (search x (cdr l))])) 
+   (define (removal l)
+    (cond[(null? l) ans]
+         [(eq? (search p (car l)) #t) (removal (cdr l))]
+         [else (begin (set! ans (append ans (list (car l))))
+                      (removal (cdr l)))]))
+    (removal l))
+     
+ 
+  
+                                      
+                                             
+
+  (define (remove-singlen p l)
+    (define (searchn x l)
+      (define ans null)
+      (define (helper x l)
+        (if (null? l) ans
+            (cond[(equal? x (-(car l))) (helper x (cdr l))]
+                 [(begin (set! ans (append ans (list (car l))))
+                         (helper x (cdr l)))])))
+      (helper x l))
+    (remove-duplicates (map (lambda(x) (searchn p x)) l)))
+
+  (define (assingn x)
+  (cond[(< 0 x) (set! global (append global (list (cons x #t))))]
+       [(> 0 x) (set! global (append global (list (cons x #f))))]))
+
+  
+ (define (remove-element l)
+    (define ans l)
+    (define (helper l1 l2)
+    (cond[(eq? l1 #t) #t]
+         [(eq? l1 #f) #f]
+         [(list? l1)
+          (begin (set! ans (remove-single (car l1) ans))
+                 (set! ans (remove-singlen (car l1) ans))
+                 (assingn (car (unitlist l)))
+                 (if (equal? ans l2) ans (helper (unitlist ans) l2)))]))
+    (helper (unitlist l) ans)
+   ans)
+
+;  (remove-element l))
+         
+                
+         
+                           
+;remves null lists
+(define (remove-null l)
+  (define ans null)
+  (define (remove-null1 l)
+  (cond[(null? l) ans] 
+       [(if (null? (car l)) (remove-null1 (cdr l))
+       (begin (set! ans (append ans (list (car l))))
+             (remove-null1 (cdr l))))]))
+  (remove-null1 l))
+  
+;;;removes required list which has the element
+
+
+;;removes the positive literal elements
+;(define (remove1 l)
+;  (define ans (remove-single (car (unitlist l)) l));;;;;;;;give condition 
+;   (define (helper l1)
+;    (cond[(null? l1) ans]
+;         [(begin (set! ans (remove-single (car l1) ans))
+;                 (helper (cdr l1)))]))
+;  (helper (unitlist l)))
+
+
+
+;(define (remove2 l)
+;  (define ans (remove1 l))
+;  (define (helper l1)
+;    (cond[(null? l1) ans]
+;         [(begin (set! ans (remove-singlen (car l1) ans))
+;                 (helper (cdr l1)))]))
+;  (helper (unitlist l)))
+;  
+ 
+;                         
+;  (assinging (unitlist l))
+;  (remove2 l))
+;  
+
+;;flatten
+
+(define (Lateral-propogation l)
+(define (allelements l)
+  (flatten l))
+
+;;different
+(define (different l)
+  (remove-duplicates (allelements l)))
+
+;;if negative exits or not
+(define (checking l)
+  (define ans null)
+  (define (helper l1 l2)
+  (define (searchn x l)
+      (cond[(null? l) (set! ans (append ans (list x)))]
+           [(if (eq? x (-(car l)))  (set! ans (append ans null))
+                (searchn x (cdr l)))]))
+    (map (lambda(x) (searchn x l2)) l1))
+  (helper (different l) (different l))
+  ans)
+
+
+(define (more-than-one l1 l2)
+  (define ans null)
+  (define (helper l1 l2)
+  (define (noof x l)
+    (define ans null)
+    (define (helper l)
+    (cond[(null? l) ans ]
+         [(eq? x (car l)) (begin (set! ans (append ans (list (car l))))
+                                 (helper (cdr l)))]
+         [(helper (cdr l))]))
+    (helper l))
+  (cond[(null? (cdr l1)) ans]
+       [(if  (null? (cdr (noof (car l1) l2))) (helper (cdr l1 ) l2)
+             (begin (set! ans (append ans (list (car l1))))
+                    (helper (cdr l1) l2)))]))
+    (helper l1 l2)
+  ans)
+
+(define (removec l1 l2)
+  (define ans (map (lambda(x) (remove (car l1) x)) l2))
+  (define (helper l1 l2)
+ (cond[(null? l1) ans]
+      [(begin (set! ans (map (lambda(x) (remove (car l1) x)) ans))
+             (helper (cdr l1) l2))]))
+  (helper l1 l2))
+(define (assinging l)
+  (cond[(null? l) (set! global (append global null))]
+       [(< 0 (car l)) (begin (set! global (append global (list (cons (car l) #t))))
+                             (assinging (cdr l)))]
+       [(> 0 (car l)) (begin (set! global (append global (list (cons (car l) #f))))
+                             (assinging (cdr l)))]))
+  (assinging (more-than-one (checking l) (allelements l)))
+(removec (more-than-one (checking l) (allelements l)) l))
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

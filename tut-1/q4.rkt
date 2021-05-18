@@ -1,0 +1,11 @@
+#lang racket
+(define (all-primes n c)
+  (if (< n c) '()
+      (if (is-prime c) (append (list c) (all-primes n (+ c 1)))
+          (all-primes n (+ c 1)))))
+(define (goldmach n)
+  (define (helper n l)
+    (if (= (remainder n 2) 0) (if (is-prime (- n (car l))) (cons (car l) (- n (car l)))
+                                 (helper n (cdr l)))
+                                 #f))
+  (helper n (all-primes n 3)))

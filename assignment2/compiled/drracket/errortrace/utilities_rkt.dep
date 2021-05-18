@@ -1,0 +1,1 @@
+("6.11" ("e958f95f494d0899eed16e0bc85038e7ca13f4a0" . "2892938cb609afef1b443fb644db505366be373d") #"/home/raviteja/Desktop/assignment2/declarations.rkt" (collects #"errortrace" #"errortrace-key.rkt") (collects #"parser-tools" #"lex.rkt") (collects #"parser-tools" #"yacc.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))

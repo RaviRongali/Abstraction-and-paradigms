@@ -1,0 +1,52 @@
+#lang racket
+
+(define (make-account balance password)
+
+  (define (withdraw amount)
+    (if (>= balance amount)
+   (begin (set! balance (- balance amount))
+           balance)
+    "Insufficient funds"))
+
+  (define (deposit amount)
+       (set! balance (+ balance amount))
+         balance)
+
+  (define (dispatch m)
+    (cond ((eq? m 'withdraw) withdraw)
+          ((eq? m 'deposit) deposit)
+          (else (lambda (x) "Unknown request"
+                   ))))
+
+  (define (verification p)
+ (cond[ (eq? p password ) dispatch]
+      [else (lambda (x) (lambda (x) "wrong pass" ))]))
+  
+verification)
+
+
+(define nagadev (make-account 5000 'lukka))
+
+
+(((nagadev 'lukka) 'withdraw1) 100)
+(((nagadev 'lukka1) 'withdraw) 100)
+(((nagadev 'lukka1) 'withdraw1) 100)
+(define (joint-account make-account password newpassword)
+  (define (verification p)
+  (cond[(eq? p newpassword) (make-account password)]
+      [else (lambda (x) (lambda (x) "wrong pass" ))]))
+  verification)
+(define ravi (joint-account nagadev 'lukka 'teja))
+(((ravi 'teja) 'withdraw )100)
+(define (inf)
+  (define x1 0)
+  (define x2 0)
+  (define x3 0)
+  (define (inf-h)
+    (begin (set! x1 x2) (set! x2 x3) (set! x3 (read)) (displayln (+ x1 x2 x3)) (inf-h)))
+    (inf-h))
+
+  
+  
+  
+

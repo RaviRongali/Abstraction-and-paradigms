@@ -1,0 +1,118 @@
+#lang racket
+
+(provide t1 print-node (struct-out node) (struct-out nulltree) mycons myappend
+            count)
+
+(struct node (val ltree rtree) #:transparent)
+(struct nulltree () #:transparent)
+
+(struct node1 (ltree rtree) #:transparent)
+(struct leaf (val) #:transparent)
+
+(struct gnode (val lst))
+; Now the following functions get defined automatically
+; The constructors node and nulltree
+; The selectors node-val, node-ltree, node-rtree
+; The predicate node? nulltree?
+   
+(define t4 (node 2 
+                 (node 1 (nulltree) (nulltree))
+                 (node 3 (nulltree) (nulltree))))
+(define t6 (node 6 (nulltree) (nulltree)))
+(define t7 (node 2  (node 7 (nulltree) (nulltree))
+                 (node 9 (nulltree) (nulltree))))
+(define t8 (node 8 (node 7 (nulltree) (nulltree))
+                 (node 9 (nulltree) (nulltree))))  
+(define t10 (node 12 (node 11 (nulltree) (nulltree))
+                  (node 13 (nulltree) (nulltree))))
+(define t11 (node 16 (node 15 (nulltree) (nulltree))
+                  (node 17 (nulltree) (nulltree))))
+(define t9 (node 14 t10 t11))
+(define t3 (node 10  t8 t9))
+(define t5 (node 5 (nulltree) (nulltree)))
+(define t2 (node 4  t4 t5))
+(define t1 (node 6 t2 t3))
+
+
+;;my own printing routine 
+(define (print-nulltree)
+  (begin (newline)
+	 (print-nulltree-helper 0)
+	 (newline)))
+
+(define (print-node t)
+  (print-node-helper t 0))
+
+(define (print-node-helper t indent)
+  (begin (newline)
+	 (printblanks indent)
+	 (write-string "(node ")
+         ;(printblanks 1 op)
+         (display (node-val t))
+         ;(newline op)
+         (let ((t1 (node-ltree t)))
+	   (cond ((node? t1) (print-node-helper t1 (+ indent 2)))
+		 ((nulltree? t1)  (print-nulltree-helper (+ indent 2)))))
+         (let ((t1 (node-rtree t)))
+	   (cond ((node? t1) (print-node-helper t1 (+ indent 2)))
+		 ((nulltree? t1)  (print-nulltree-helper (+ indent 2)))))
+	 (write-char #\)) 
+	 ;(newline op) 
+	 ))
+
+
+(define (print-nulltree-helper indent)
+  (begin (printblanks 1 )
+	(write-string "N")))
+
+(define (printblanks indent)
+  (if (= indent 0) `()
+      (begin
+	(write-char #\space )
+        (printblanks (- indent 1)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define count 0)
+(define (mycons x l)
+   (begin (set! count (+ count 1))
+	  (cons x l)))
+
+(define (myappend l1 l2)
+  (if (null? l1) l2
+      (mycons (car l1) (myappend (cdr l1) l2))))
+
+
+
+;(define (flatten t)
+;  (cond [(nulltree? t) '()]
+;        [else (append (flatten (node-ltree t))
+;                      (list (node-val t))
+;                      (flatten (node-rtree t)))]))
+
+(define (flatten t)
+  (match t
+    [(nulltree) '()]
+    [(node v lt rt) (append (flatten lt) (list v) (flatten rt))]))
+
+(define (insert x t)
+  (match t
+    [(nulltree) (node x (nulltree) (nulltree))]
+    [(node v lt rt) (cond [(<= x v) (node v (insert x lt) rt)]
+                          [(> x v) (node v lt (insert x rt))])]))
+
+(define (delete x t)
+  (match t
+    [(nulltree) t]
+    [(node v lt rt) (cond [(= x v) (join lt rt)]
+                          [(< x v) (node v (delete x lt) rt)]
+                          [(> x v) (node v lt (delete x rt))])]))
+
+(define (join t1 t2)
+  (define (readjust t)
+    (match t
+      [(node v lt (nulltree)) lt]
+      [(node v lt rt) (node v lt (readjust rt))])))
+
+  (cond [(nulltree? t1) t2]
+        [else (node (rightmost t1) (readjust t1) t2)]))

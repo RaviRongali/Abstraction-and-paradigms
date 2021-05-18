@@ -1,0 +1,39 @@
+
+               GUIDELINES FOR PROJECT PROPOSAL
+-------------------------------------------------------------
+
+Please submit  a short document  as a  project proposal in  the format
+described below.  Submit it in the link provided in moodle.  Please do
+it by 16th February, Thursday.
+
+What constitutes a project?   Any coding problem that requires writing
+about 300 lines  of Scheme code.  You may  code any application, game,
+utilty  or whatever  pleases  you.   In the  end,  the project  should
+demonstrate that you have learnt enough  from the course to be able to
+write a  well written  program that employs  some of  the abstractions
+discussed. However  the project  should also be  fun to code  - choose
+something that you think will be interesting.
+
+Now here are the guidelines regarding the proposal:
+
+1. The proposal is expected to  be no longer than two pages.
+
+2. It should have the following headings:
+  a. Names of the students in the group doing the project. There will 
+     be at most 3 students per group.
+  b. Title of the project.
+  c. A brief description of the problem.
+  d. Some idea of the solution.
+  d. Sample input output.
+  e. Discussion.
+
+3. The description  should be at the intuitive  level.  I shall prefer
+examples and diagrams over long paragraphs of prose.
+
+Remember the aim behind the proposal.
+(i)  It is to bring some clarity to your own thinking.
+(ii) To ensure that  the project is doable  i.e. 
+     a. It is of the right  level of difficulty. It should not take so
+     much of your time as to affect other courses.
+     b. To  identify the resources (software packages  and tools) that
+     you require and ensure that they are available under drracket.
